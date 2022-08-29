@@ -16,7 +16,7 @@ Trong đó chúng ta có:
 
 ##### Tiến hành viết code Terraform để triển khai
 1. Tạo một mạng VPC
-   ```json
+   ```javascript
    resource "aws_vpc" "my_vpc" {
      cidr_block       = "10.0.0.0/16"
      enable_dns_hostnames = true
@@ -28,7 +28,7 @@ Trong đó chúng ta có:
    ```   
 2. Tạo một Public Subnet nằm trong my_vpc, chú ý subnet này có `map_public_ip_on_launch = true`
 nghĩa là nó sẽ tự động assign public IP cho những instance được run trong nó.
-   ```json
+   ```javascript
    resource "aws_subnet" "public" {
      vpc_id     = aws_vpc.my_vpc.id
      cidr_block = "10.0.0.0/24"
@@ -41,7 +41,7 @@ nghĩa là nó sẽ tự động assign public IP cho những instance được 
    }
    ```   
 3.  Tạo một Internet Gateway  nằm trong VPC, dùng để điều hướng traffic từ VPC ra internet và ngược lại
-      ```json
+      ```javascript
       resource "aws_internet_gateway" "my_vpc_igw" {
         vpc_id = aws_vpc.my_vpc.id
       
@@ -51,7 +51,7 @@ nghĩa là nó sẽ tự động assign public IP cho những instance được 
       }
       ```   
 4. Tạo một Route Table và associate với Public Subnet, nó dùng để route traffic trong Public Subnet ra internet.
-   ```json
+   ```javascript
    resource "aws_route_table" "my_vpc_ap_southeast_1a_public" {
        vpc_id = aws_vpc.my_vpc.id
    
@@ -71,7 +71,7 @@ nghĩa là nó sẽ tự động assign public IP cho những instance được 
    }
    ```
 5.  Tạo một Security Group cho Public Instance, Security Group cho phép SSH và PING từ bên ngoài AWS vào Public Instance.
-      ```json
+      ```javascript
       resource "aws_security_group" "allow_ssh" {
         name        = "allow_ssh_sg"
         description = "Allow SSH inbound connections"
@@ -104,7 +104,7 @@ nghĩa là nó sẽ tự động assign public IP cho những instance được 
       }
       ```
 6. Tạo Public Instance bên trong Public Subnet, Instance sử dụng lại Security Group vừa tạo bên trên
-   ```json
+   ```javascript
    resource "aws_instance" "my_public" {
      ami           = "ami-0b89f7b3f054b957e"
      instance_type = "t2.micro"
@@ -117,7 +117,7 @@ nghĩa là nó sẽ tự động assign public IP cho những instance được 
    }
    ```
 7. Tạo một NAT Gateway bên trong Public Subnet, Elastic IP là bắt buộc thì tạo một NAT Gateway, vì vậy trong block code này bạn thấy code tạo Elastic IP trước, sau đó chúng ta gán Elastic IP vào NAT Gateway.
-   ```json
+   ```javascript
    resource "aws_eip" "nat_gw_eip" {
      vpc = true
    }
@@ -128,7 +128,7 @@ nghĩa là nó sẽ tự động assign public IP cho những instance được 
    }
    ```
 8. Phần setup trong Public Subnet đã xong, bây giờ chúng ta sẽ tạo Private Subnet và các thành phần bên trong nó:
-   ```json
+   ```javascript
    resource "aws_subnet" "private" {
      vpc_id     = aws_vpc.my_vpc.id
      cidr_block = "10.0.1.0/24"
@@ -140,7 +140,7 @@ nghĩa là nó sẽ tự động assign public IP cho những instance được 
    }
    ```
 9.  Tạo một Route Table và associate với Private Subnet vừa tạo bên trên, nó dùng để route traffic trong Private Subnet đến NAT Gateway, từ đó có thể ra ngoài internet
-    ```json
+    ```javascript
     resource "aws_route_table" "my_vpc_ap_southeast_1a_nated" {
           vpc_id = aws_vpc.my_vpc.id
       
@@ -159,7 +159,7 @@ nghĩa là nó sẽ tự động assign public IP cho những instance được 
       }
       ```
 10. Tạo một Security Group cho Private Instance, Security Group cho phép SSH và PING chỉ từ bên trong mạng VPC. Ví dụ trong bài lab này là SSH và PING từ Bastion Host
-      ```json
+      ```javascript
       resource "aws_security_group" "internal_ssh_and_ping" {
         name        = "internal_ssh_and_ping_sg"
         description = "Allow SSH inbound connections from bastion host(public instance)"
@@ -192,7 +192,7 @@ nghĩa là nó sẽ tự động assign public IP cho những instance được 
       }
       ```
 11. Tạo Private Instance bên trong Private Subnet
-    ```json
+    ```javascript
     resource "aws_instance" "my_private" {
         ami           = "ami-0b89f7b3f054b957e"
         instance_type = "t2.micro"
@@ -207,7 +207,7 @@ nghĩa là nó sẽ tự động assign public IP cho những instance được 
 12. Output thông tin gồm:
    * Public IP của Public Instance, mình dùng IP này để PING và SSH vào Public Instance từ máy local.
    * Private IP của Private Instance, mình dùng IP này để PING và SSH vào Private Instance từ Bastion Host.
-  ```json
+  ```javascript
   output "public_ip" {
      description = "Public instance IP"
      value       = aws_instance.my_public.*.public_ip
@@ -220,7 +220,7 @@ nghĩa là nó sẽ tự động assign public IP cho những instance được 
    ```
    
 ##### Các bước tạo Terraform code đã xong, bây giờ chúng ta tiến hành chạy code để triển trai hệ thống lên AWS.
-   ```json
+   ```javascript
    terraform init
    terraform validate
    terraform apply -auto-approve
